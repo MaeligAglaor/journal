@@ -13,17 +13,17 @@ LINKERFILENAME = lib$(LINKERNAME).so
 SONAME = $(LINKERFILENAME)$(MAJOR)
 REALNAME = $(SONAME)$(MINOR)$(PATCH)
 STATICLINKERFILENAME = lib$(LINKERNAME).a
-OBJECTS = journal.o
+OBJECTS = lib/journal.o
 
 # Options de compilaion et linker pour la bibliothèque
 libCFLAGS = -fPIC -Wall -shared
-libLDFLAGS = -L.
+libLDFLAGS = -L./lib
 libLDLIBS = -lc
 
 # Nom de l'exécutable
 PROG = devoir
 
-all: library
+all: prog
 
 $(OBJECTS) : CFLAGS = $(libCFLAGS)
 
@@ -35,5 +35,15 @@ $(REALNAME) $(LINKERFILENAME) $(SONAME): $(OBJECTS)
 	ln -sf $(REALNAME) $(LINKERFILENAME)
 	ln -sf $(REALNAME) $(LINKERFILENAME)$(MAJOR)
 
+prog: $(STATICLINKERFILENAME) $(REALNAME)
+	$(CC) -c $(CFLAGS) main.c
+	$(CC) -o $(PROG).static main.o $(LDFLAGS) -l:$(STATICLINKERFILENAME)
+	$(CC) -Ilib -o $(PROG).shared main.o $(libLDFLAGS) -l$(LINKERNAME)
+	LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH ./$(PROG).shared
+
+
 library: $(REALNAME) $(STATICLINKERFILENAME)
+
+clean:
+	rm -f *.o *$(PROG)*
 
